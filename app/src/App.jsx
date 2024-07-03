@@ -1,35 +1,72 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.jsx
+import React, { useEffect } from "react";
+import "./App.css";
+import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
+import LandingPage from "./components/LandingPage";
+import ChatContainer from "./components/ChatContainer";
+import SessionSidebar from "./components/SessionSidebar";
+import SessionManagement from "./components/SessionManagement";
+import useSessions from "./hooks/useSessions";
+import useChat from "./hooks/useChat";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const {
+    sessions,
+    currentSessionId,
+    currentSession,
+    startNewSession,
+    endSession,
+    selectSession,
+    clearSessions,
+    addMessageToSession,
+  } = useSessions();
+
+  const { messages, typing, sendMessage } = useChat(currentSession.messages);
+
+  useEffect(() => {
+    if (!currentSessionId && sessions.length > 0) {
+      selectSession(sessions[0].id);
+    }
+  }, [currentSessionId, sessions, selectSession]);
+
+  const handleSend = (message) => {
+    sendMessage(message);
+    addMessageToSession(currentSessionId, {
+      message: message,
+      sender: "user",
+      direction: "outgoing",
+    });
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div style={{ display: "flex" }}>
+      {currentSessionId !== null && (
+        <SessionSidebar
+          sessions={sessions}
+          currentSessionId={currentSessionId}
+          onSelectSession={selectSession}
+          onClearSessions={clearSessions}
+        />
+      )}
+      <div style={{ flex: 1 }}>
+        {currentSessionId === null ? (
+          <LandingPage onStartChat={startNewSession} />
+        ) : (
+          <>
+            <ChatContainer
+              messages={messages}
+              typing={typing}
+              handleSend={handleSend}
+            />
+            <SessionManagement
+              handleEndSession={endSession}
+              handleNewSession={startNewSession}
+            />
+          </>
+        )}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
