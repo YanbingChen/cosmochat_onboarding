@@ -27,14 +27,18 @@ const useSessions = () => {
   };
 
   const endSession = () => {
-    const newSessions = sessions.filter(
-      (session) => session.id !== currentSessionId
-    );
-    setSessions(newSessions);
-    if (newSessions.length > 0) {
-      setCurrentSessionId(newSessions[newSessions.length - 1].id);
+    if (sessions.length === 1) {
+      clearSessions();
     } else {
-      startNewSession();
+      const newSessions = sessions.filter(
+        (session) => session.id !== currentSessionId
+      );
+      setSessions(newSessions);
+      if (newSessions.length > 0) {
+        setCurrentSessionId(newSessions[newSessions.length - 1].id);
+      } else {
+        setCurrentSessionId(null);
+      }
     }
   };
 
@@ -61,7 +65,7 @@ const useSessions = () => {
 
   const currentSession = sessions.find(
     (session) => session.id === currentSessionId
-  ) || { messages: initialMessage };
+  ) || { messages: [] };
 
   return {
     sessions,
