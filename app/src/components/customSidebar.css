@@ -1,0 +1,38 @@
+/* src/customSidebar.css */
+.pro-sidebar {
+    background: #f9f9f9 !important;
+    color: #3d3d3d !important;
+  }
+  
+  .pro-sidebar .pro-menu-item {
+    color: #3d3d3d !important;
+  }
+  
+  .pro-sidebar .pro-menu-item.active {
+    background: #e0e0e0 !important;
+    color: #292929 !important;
+  }
+  
+  .pro-sidebar .pro-menu-item:hover  {
+    background: #e0e0e0 !important;
+    color: #292929 !important;
+  }
+  
+  .pro-sidebar .pro-sidebar-footer {
+    background: #f9f9f9 !important;
+  }
+  
+  .pro-sidebar .pro-sidebar-header {
+    background: #f9f9f9 !important;
+    color: #292929 !important;
+    font-weight: bold;
+  }
+.pro-sidebar-inner{
+    background: #f9f9f9 !important;
+}
+.pro-item-content{
+    color: #292929 !important;
+}
+.pro-item-content:hover{
+    color: #141414 !important;
+}

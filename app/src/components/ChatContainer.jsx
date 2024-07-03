@@ -11,7 +11,14 @@ import {
 
 const ChatContainer = ({ messages, typing, handleSend }) => {
   return (
-    <div style={{ position: "relative", height: "800px", width: "700px" }}>
+    <div
+      style={{
+        position: "relative",
+        height: "80vh",
+        width: "50vw",
+        maxWidth: "800px",
+      }}
+    >
       <MainContainer>
         <ChatUIContainer>
           <MessageList
