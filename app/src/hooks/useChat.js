@@ -1,51 +1,55 @@
-// src/hooks/useChat.js
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { fetchChatGPTResponse } from "../utils/api";
 
-const useChat = () => {
-  const [messages, setMessages] = useState([
-    {
-      message: "Hello, I am ChatGPT!",
-      sender: "ChatGPT",
-      direction: "incoming",
-    },
-  ]);
-
+const useChat = (initialMessages, addMessageToSession, sessionId) => {
+  const [messages, setMessages] = useState(initialMessages);
   const [typing, setTyping] = useState(false);
 
-  const sendMessage = async (message) => {
-    const newMessage = {
-      message: message,
-      sender: "user",
-      direction: "outgoing",
-    };
+  useEffect(() => {
+    setMessages(initialMessages);
+  }, [initialMessages]);
 
-    const newMessages = [...messages, newMessage];
-    setMessages(newMessages);
-    setTyping(true);
+  const updateMessages = useCallback(
+    (newMessage) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      addMessageToSession(sessionId, newMessage);
+    },
+    [addMessageToSession, sessionId]
+  );
 
-    try {
-      const data = await fetchChatGPTResponse(newMessages);
-      if (data.choices && data.choices.length > 0) {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
+  const sendMessage = useCallback(
+    async (message) => {
+      const newMessage = {
+        message: message,
+        sender: "user",
+        direction: "outgoing",
+      };
+
+      updateMessages(newMessage);
+      setTyping(true);
+
+      try {
+        const data = await fetchChatGPTResponse([...messages, newMessage]);
+        if (data.choices && data.choices.length > 0) {
+          const chatGPTMessage = {
             message: data.choices[0].message.content,
             sender: "ChatGPT",
             direction: "incoming",
-          },
-        ]);
-      } else {
-        console.error("Error:", data);
-        alert("Error: " + data.error.message);
+          };
+          updateMessages(chatGPTMessage);
+        } else {
+          console.error("Error:", data);
+          alert("Error: " + data.error.message);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Error: " + error.message);
+      } finally {
+        setTyping(false);
       }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Error: " + error.message);
-    } finally {
-      setTyping(false);
-    }
-  };
+    },
+    [messages, updateMessages]
+  );
 
   return { messages, typing, sendMessage };
 };

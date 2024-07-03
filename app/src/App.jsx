@@ -8,6 +8,7 @@ import SessionSidebar from "./components/SessionSidebar";
 import SessionManagement from "./components/SessionManagement";
 import useSessions from "./hooks/useSessions";
 import useChat from "./hooks/useChat";
+import useFirebaseMessaging from "./hooks/useFirebaseMessaging";
 
 function App() {
   const {
@@ -21,21 +22,24 @@ function App() {
     addMessageToSession,
   } = useSessions();
 
-  const { messages, typing, sendMessage } = useChat(currentSession.messages);
+  const { messages, typing, sendMessage } = useChat(
+    currentSession.messages,
+    addMessageToSession,
+    currentSessionId
+  );
 
   useEffect(() => {
     if (!currentSessionId && sessions.length > 0) {
       selectSession(sessions[0].id);
     }
+    console.log("App initialized. Current sessions:", sessions); // Debug log
   }, [currentSessionId, sessions, selectSession]);
+
+  // 调用自定义 Hook 来处理推送通知
+  useFirebaseMessaging();
 
   const handleSend = (message) => {
     sendMessage(message);
-    addMessageToSession(currentSessionId, {
-      message: message,
-      sender: "user",
-      direction: "outgoing",
-    });
   };
 
   return (

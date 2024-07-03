@@ -18,45 +18,51 @@ const useSessions = () => {
 
   useEffect(() => {
     localStorage.setItem("sessions", JSON.stringify(sessions));
+    console.log("Sessions updated:", sessions); // Debug log
   }, [sessions]);
 
   const startNewSession = () => {
     const newSession = { id: Date.now(), messages: initialMessage };
     setSessions([...sessions, newSession]);
     setCurrentSessionId(newSession.id);
+    console.log("New session started:", newSession); // Debug log
   };
 
   const endSession = () => {
-    if (sessions.length === 1) {
-      clearSessions();
+    const newSessions = sessions.filter(
+      (session) => session.id !== currentSessionId
+    );
+    setSessions(newSessions);
+    if (newSessions.length > 0) {
+      setCurrentSessionId(newSessions[newSessions.length - 1].id);
     } else {
-      const newSessions = sessions.filter(
-        (session) => session.id !== currentSessionId
-      );
-      setSessions(newSessions);
-      if (newSessions.length > 0) {
-        setCurrentSessionId(newSessions[newSessions.length - 1].id);
-      } else {
-        setCurrentSessionId(null);
-      }
+      setCurrentSessionId(null);
     }
+    console.log("Session ended. Current sessions:", newSessions); // Debug log
   };
 
   const selectSession = (id) => {
     setCurrentSessionId(id);
+    console.log("Session selected:", id); // Debug log
   };
 
   const clearSessions = () => {
     setSessions([]);
     setCurrentSessionId(null);
     localStorage.removeItem("sessions");
+    console.log("All sessions cleared"); // Debug log
   };
 
   const addMessageToSession = (sessionId, message) => {
-    setSessions(
-      sessions.map((session) => {
+    setSessions((prevSessions) =>
+      prevSessions.map((session) => {
         if (session.id === sessionId) {
-          return { ...session, messages: [...session.messages, message] };
+          const updatedSession = {
+            ...session,
+            messages: [...session.messages, message],
+          };
+          console.log("Message added to session:", updatedSession); // Debug log
+          return updatedSession;
         }
         return session;
       })
@@ -65,7 +71,7 @@ const useSessions = () => {
 
   const currentSession = sessions.find(
     (session) => session.id === currentSessionId
-  ) || { messages: [] };
+  ) || { messages: initialMessage };
 
   return {
     sessions,
