@@ -1,8 +1,8 @@
-# QuantumBot React Application
+# Cosmochat React Application
 
 ## Description
 
-The QuantumBot React Application is a chat interface built using React and various other modern web development tools. It features a welcome page, a chat interface, session management, and an activity dashboard that provides real-time user activity metrics.
+The Cosmochat React Application is a chat interface built using React and various other modern web development tools. It features a welcome page, a chat interface, session management, and an activity dashboard that provides real-time user activity metrics.
 
 ## Tools Used
 
