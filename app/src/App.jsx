@@ -1,5 +1,5 @@
 // src/App.jsx
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import LandingPage from "./components/LandingPage";
@@ -9,12 +9,18 @@ import SessionManagement from "./components/SessionManagement";
 import useSessions from "./hooks/useSessions";
 import useChat from "./hooks/useChat";
 import useFirebaseMessaging from "./hooks/useFirebaseMessaging";
+import { Box, Button, IconButton, Typography } from "@mui/material";
+import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
+import ActivityDashboard from "./components/ActivityDashboard";
 
 function App() {
+  const [currentView, setCurrentView] = useState("landingPage"); // 'landingPage', 'chat', 'activity'
+
   const {
     sessions,
     currentSessionId,
     currentSession,
+    additionalInfo,
     startNewSession,
     endSession,
     selectSession,
@@ -33,29 +39,55 @@ function App() {
       selectSession(sessions[0].id);
     }
     console.log("App initialized. Current sessions:", sessions); // Debug log
+    console.log("Addtional info:", additionalInfo); // Debug log
   }, [currentSessionId, sessions, selectSession]);
 
-  // 调用自定义 Hook 来处理推送通知
   useFirebaseMessaging();
 
   const handleSend = (message) => {
     sendMessage(message);
   };
 
+  const handleStartChat = () => {
+    if (!currentSessionId) {
+      startNewSession();
+    }
+    setCurrentView("chat");
+  };
+
+  const handleStartSession = () => {
+    startNewSession();
+    setCurrentView("chat");
+  };
+
+  const handleEndSession = () => {
+    if (sessions.length === 1) {
+      endSession();
+      setCurrentView("landingPage");
+    } else {
+      endSession();
+    }
+  };
+
+  const handleClearSessions = () => {
+    clearSessions();
+    setCurrentView("landingPage");
+  };
+
   return (
     <div style={{ display: "flex" }}>
-      {currentSessionId !== null && (
+      {currentView !== "landingPage" && currentView !== "activity" && (
         <SessionSidebar
           sessions={sessions}
           currentSessionId={currentSessionId}
           onSelectSession={selectSession}
-          onClearSessions={clearSessions}
+          onClearSessions={handleClearSessions}
         />
       )}
       <div style={{ flex: 1 }}>
-        {currentSessionId === null ? (
-          <LandingPage onStartChat={startNewSession} />
-        ) : (
+        {currentView === "landingPage" ? (
+          <LandingPage onStartChat={handleStartChat} />
+        ) : currentView === "chat" ? (
           <>
             <ChatContainer
               messages={messages}
@@ -63,11 +95,24 @@ function App() {
               handleSend={handleSend}
             />
             <SessionManagement
-              handleEndSession={endSession}
-              handleNewSession={startNewSession}
+              handleEndSession={handleEndSession}
+              handleNewSession={handleStartSession}
+              setCurrentView={setCurrentView}
             />
           </>
-        )}
+        ) : currentView === "activity" ? (
+          <Box style={{ padding: "20px" }}>
+            <Box display="flex" alignItems="center" marginBottom="20px">
+              <IconButton
+                onClick={() => setCurrentView("chat")}
+                color="primary"
+              >
+                <ArrowBackOutlinedIcon />
+              </IconButton>
+            </Box>
+            <ActivityDashboard additionalInfo={additionalInfo} />
+          </Box>
+        ) : null}
       </div>
     </div>
   );

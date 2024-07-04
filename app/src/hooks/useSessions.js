@@ -15,30 +15,56 @@ const useSessions = () => {
     return storedSessions ? JSON.parse(storedSessions) : [];
   });
   const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [additionalInfo, setAdditionalInfo] = useState(() => {
+    const storedInfo = localStorage.getItem("additionalInfo");
+    return storedInfo ? JSON.parse(storedInfo) : {};
+  });
 
   useEffect(() => {
     localStorage.setItem("sessions", JSON.stringify(sessions));
-    console.log("Sessions updated:", sessions); // Debug log
-  }, [sessions]);
+    localStorage.setItem("additionalInfo", JSON.stringify(additionalInfo));
+    console.log(
+      "Sessions and additionalInfo updated:",
+      sessions,
+      additionalInfo
+    ); // Debug log
+  }, [sessions, additionalInfo]);
 
   const startNewSession = () => {
-    const newSession = { id: Date.now(), messages: initialMessage };
+    const newSessionId = Date.now();
+    const newSession = { id: newSessionId, messages: initialMessage };
     setSessions([...sessions, newSession]);
-    setCurrentSessionId(newSession.id);
+    setCurrentSessionId(newSessionId);
+    setAdditionalInfo({
+      ...additionalInfo,
+      [newSessionId]: {
+        startTime: new Date().toISOString(),
+        endTime: null,
+        messageCount: 1, // Initial message from ChatGPT
+        dailyMessageCount: {
+          [new Date().toISOString().split("T")[0]]: 1,
+        },
+      },
+    });
     console.log("New session started:", newSession); // Debug log
   };
 
   const endSession = () => {
-    const newSessions = sessions.filter(
-      (session) => session.id !== currentSessionId
-    );
-    setSessions(newSessions);
-    if (newSessions.length > 0) {
-      setCurrentSessionId(newSessions[newSessions.length - 1].id);
+    const endTime = new Date().toISOString();
+    setSessions(sessions.filter((session) => session.id !== currentSessionId));
+    setAdditionalInfo((prevInfo) => ({
+      ...prevInfo,
+      [currentSessionId]: {
+        ...prevInfo[currentSessionId],
+        endTime: endTime,
+      },
+    }));
+    if (sessions.length > 1) {
+      setCurrentSessionId(sessions[sessions.length - 2].id);
     } else {
       setCurrentSessionId(null);
     }
-    console.log("Session ended. Current sessions:", newSessions); // Debug log
+    console.log("Session ended. Current sessions:", sessions); // Debug log
   };
 
   const selectSession = (id) => {
@@ -48,12 +74,15 @@ const useSessions = () => {
 
   const clearSessions = () => {
     setSessions([]);
+    setAdditionalInfo({});
     setCurrentSessionId(null);
     localStorage.removeItem("sessions");
+    localStorage.removeItem("additionalInfo");
     console.log("All sessions cleared"); // Debug log
   };
 
   const addMessageToSession = (sessionId, message) => {
+    const currentDate = new Date().toISOString().split("T")[0];
     setSessions((prevSessions) =>
       prevSessions.map((session) => {
         if (session.id === sessionId) {
@@ -67,6 +96,21 @@ const useSessions = () => {
         return session;
       })
     );
+    setAdditionalInfo((prevInfo) => {
+      const prevDailyCount =
+        prevInfo[sessionId].dailyMessageCount[currentDate] || 0;
+      return {
+        ...prevInfo,
+        [sessionId]: {
+          ...prevInfo[sessionId],
+          messageCount: prevInfo[sessionId].messageCount + 1,
+          dailyMessageCount: {
+            ...prevInfo[sessionId].dailyMessageCount,
+            [currentDate]: prevDailyCount + 1,
+          },
+        },
+      };
+    });
   };
 
   const currentSession = sessions.find(
@@ -77,6 +121,7 @@ const useSessions = () => {
     sessions,
     currentSessionId,
     currentSession,
+    additionalInfo,
     startNewSession,
     endSession,
     selectSession,
